@@ -13,6 +13,10 @@ your hosts lxc packages must already be installed.
 
 .. code-block:: bash
 
+    vagrant plugin install vagrant-lxc
+
+.. code-block:: bash
+
     git clone https://github.com/UtahDave/salt-vagrant-lxc.git
     cd salt-vagrant-lxc
     vagrant up --provider lxc
