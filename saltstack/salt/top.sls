@@ -1,3 +1,6 @@
 base:
-  '*':
-    - empty
+  #'*':
+    #- libsodium
+  'roles:cassandra*':
+    - match: grain
+    - cassandra-community-edition

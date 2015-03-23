@@ -70,6 +70,10 @@ id: minion2
 #  deployment: datacenter4
 #  cabinet: 13
 #  cab_u: 14-15
+grains:
+  roles:
+    - cassandra-node
+  cassandra_cluster_name: 'Test Cluster'
 
 # Where cache data goes.
 #cachedir: /var/cache/salt/minion
