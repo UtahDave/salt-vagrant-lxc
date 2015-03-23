@@ -26,7 +26,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
                           "minion3"       => "saltstack/keys/minion3.pub"
                          }
       salt.install_type = "git"
-      salt.install_args = '2015.2'
+      salt.install_args = 'v2015.2'
       salt.install_master = true
       #salt.no_minion = true
       salt.minion_config = "saltstack/etc/master_minion"
@@ -53,7 +53,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       salt.minion_key = "saltstack/keys/minion1.pem"
       salt.minion_pub = "saltstack/keys/minion1.pub"
       salt.install_type = "git"
-      salt.install_args = '2015.2'
+      salt.install_args = 'v2015.2'
       salt.verbose = true
       salt.run_highstate = true
     end
@@ -74,7 +74,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       salt.minion_key = "saltstack/keys/minion2.pem"
       salt.minion_pub = "saltstack/keys/minion2.pub"
       salt.install_type = "git"
-      salt.install_args = '2015.2'
+      salt.install_args = 'v2015.2'
       salt.verbose = true
       salt.run_highstate = true
     end
@@ -95,7 +95,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       salt.minion_key = "saltstack/keys/minion3.pem"
       salt.minion_pub = "saltstack/keys/minion3.pub"
       salt.install_type = "git"
-      salt.install_args = '2015.2'
+      salt.install_args = 'v2015.2'
       salt.verbose = true
       salt.run_highstate = true
     end
