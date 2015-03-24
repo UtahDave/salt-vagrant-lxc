@@ -576,3 +576,11 @@ grains:
 ############################################
 # Location of the repository cache file on the master:
 #win_repo_cachefile: 'salt://win/repo/winrepo.p'
+
+# Configure the cassandra cluster.
+# This can be done alternately in each minion
+cassandra:
+  cluster:
+    - 192.168.50.10
+    - 192.168.50.11
+    - 192.168.50.12
