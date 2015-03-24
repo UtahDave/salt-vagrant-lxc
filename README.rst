@@ -4,6 +4,24 @@ Salt Vagrant LXC
 
 A Salt + Cassandra Setup using Vagrant and LXC
 
+Hardware Recommendations
+========================
+
+LXC containers are generally limited by the ulimit/cgroup resources settings of the
+host, but are configurable per instance.
+
+The host managing the LXC containers must have sufficient resources (mem, disk)
+to allow for a Salt + Cassandra cluster. The following is the minimum recommended
+host resource allocation:
+
+LXC containers: 4
+Memory per container: 2G (configured JVM limit. More would be better)
+Disk per container: 20G (depends on how much data you want to throw at Cassandra)
+
+Conclusion:
+Min memory available on LXC host: 4 * 2G = 8G
+Min disk available on LXC host: 4 * 20G = 80G
+
 
 Instructions
 ============
