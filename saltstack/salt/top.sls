@@ -1,6 +1,8 @@
 base:
-  #'*':
+  '*':
+    - pip
     #- libsodium
   'roles:cassandra*':
     - match: grain
-    - cassandra-community-edition
+    - cassandra
+    - cassandra.driver

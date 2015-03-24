@@ -1,5 +1,9 @@
 # Start all cassandra seeds followed by all nodes
 # Nodes boostrap off of the seeds in each datacenter
+#
+# Each VM in the Vagrantfile is using an inline shell
+# call to run the cassandra-start state as soon as salt
+# is installed.
 cassandra_seeds_startup:
   salt.state:
     - tgt: 'roles:cassandra-seed'

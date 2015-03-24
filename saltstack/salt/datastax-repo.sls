@@ -15,5 +15,3 @@ add-cassandra-repo:
 {% endif %}
     - enabled: true
     - clean_file: True
-    #- require_in:
-      #- pkg: dsc21

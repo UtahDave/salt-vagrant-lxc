@@ -1,5 +1,4 @@
 # Start cassandra
-cassandra-start:
+cassandra:
   service.running:
-    - name: cassandra
     - enable: True

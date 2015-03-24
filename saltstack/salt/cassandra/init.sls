@@ -1,38 +1,3 @@
-{% if grains['os_family'] == 'RedHat' %}
-  {% set baseDir = '/etc/cassandra/conf' %}
-{% elif grains['os_family'] == 'Debian' %}
-  {% set baseDir = '/etc/cassandra' %}
-{% endif %}
-
-include:
-  - java
-  - firewall
-  - datastax-repo
-
-# Install Cassandra
-# dsc21 
-# cassandra21-tools (optional)
-
-install-cassandra:
-  pkg.installed:
-    - name: dsc21
-    - skip_verify: True
-    - skip_suggestions: True
-    - refresh: True
-    - hold: False
-    - require:
-      - sls: java
-      - sls: firewall
-      - sls: datastax-repo
-
-# Stop cassandra in preparation for configuration
-stop-cassandra:
-  service.dead:
-    - name: cassandra
-    - enable: True
-    - require:
-      - pkg: install-cassandra
-
 # Configure Cassandra Nodes
 # --------------------------
 # Cassandra datacenter/cluster configuration at a glance:
@@ -62,33 +27,62 @@ stop-cassandra:
 # TODO: Apparently VMs may require the listen_address be set even if DNS 
 #       works.
 
-cassandra-config:
+{% if grains['os_family'] == 'RedHat' %}
+  {% set baseDir = '/etc/cassandra/conf' %}
+{% elif grains['os_family'] == 'Debian' %}
+  {% set baseDir = '/etc/cassandra' %}
+{% endif %}
+
+include:
+  - datastax-repo
+  - firewall
+  - java
+
+# Install Cassandra
+# dsc21 
+# cassandra21-tools (optional)
+
+dsc21:
+  pkg.installed:
+    - skip_verify: True
+    - skip_suggestions: True
+    - refresh: True
+    - hold: False
+    - require:
+      - sls: java
+      - sls: firewall
+      - sls: datastax-repo
+  service.dead:
+    - name: cassandra
+    - enable: True
+    - require:
+      - pkg: dsc21
+
+dsc21_yaml_config:
   file.managed:
     - name: {{baseDir}}/cassandra.yaml
-    - source: salt://cassandra/cassandra.yaml
+    - source: salt://cassandra/conf/cassandra.yaml
     - require:
-      - pkg: install-cassandra
+      - pkg: dsc21 
 
-cassandra-env-config:
+dsc21_env_config:
   file.managed:
     - name: {{baseDir}}/cassandra-env.sh
-    - source: salt://cassandra/cassandra-env.sh
+    - source: salt://cassandra/conf/cassandra-env.sh
     - require:
-      - pkg: install-cassandra
+      - pkg: dsc21
 
-# Clear the data directory
-delete-cassandra-data:
+dsc21_delete_data_directory:
   file.absent:
     - name: /var/lib/cassandra/data
     - require:
-      - pkg: install-cassandra
+      - pkg: dsc21
 
-# Recreate the data directory
-create-cassandra-data:
+dsc21_create_data_directory:
   file.directory:
     - name: /var/lib/cassandra/data
     - user: cassandra
     - group: cassandra 
     - mode: 0755
     - require:
-        - file: delete-cassandra-data
+        - file: dsc21_delete_data_directory
