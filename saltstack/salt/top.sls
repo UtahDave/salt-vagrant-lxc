@@ -6,3 +6,4 @@ base:
     - match: grain
     - cassandra
     - cassandra.driver
+    - cassandra.start

@@ -33,7 +33,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       salt.minion_key = "saltstack/keys/master_minion.pem"
       salt.minion_pub = "saltstack/keys/master_minion.pub"
       salt.verbose = true
-      #salt.run_highstate = true
     end
   end
 
@@ -55,12 +54,12 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       salt.install_type = "git"
       salt.install_args = '2015.2'
       salt.verbose = true
-      #salt.run_highstate = true
+      salt.run_highstate = true
     end
 
     # Start Cassandra seed to begin seeding process
     #minion_config.vm.provision "shell",
-        #inline: "salt-run state.sls cassandra-start"
+        #inline: "salt-run state.sls cassandra.start"
   end
 
   config.vm.define :minion2 do |minion_config|
@@ -80,13 +79,13 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       salt.install_type = "git"
       salt.install_args = '2015.2'
       salt.verbose = true
-      #salt.run_highstate = true
+      salt.run_highstate = true
     end
 
     # The Cassandra seed must be started on minion1 before Cassandra is
     # started on this minion
     #minion_config.vm.provision "shell",
-        #inline: "salt-run state.sls cassandra-start"
+        #inline: "salt-run state.sls cassandra.start"
   end
 
   config.vm.define :minion3 do |minion_config|
@@ -106,12 +105,12 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       salt.install_type = "git"
       salt.install_args = '2015.2'
       salt.verbose = true
-      #salt.run_highstate = true
+      salt.run_highstate = true
     end
 
     # The Cassandra seed must be started on minion1 before Cassandra is
     # started on this minion
     #minion_config.vm.provision "shell",
-        #inline: "salt-run state.sls cassandra-start"
+        #inline: "salt-run state.sls cassandra.start"
   end
 end
