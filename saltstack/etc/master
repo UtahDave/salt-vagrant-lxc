@@ -641,3 +641,12 @@
 # List of git repositories to include with the local repo:
 #win_gitrepos:
 #  - 'https://github.com/saltstack/salt-winrepo.git'
+
+
+# Configure the cassandra cluster.
+# This can be done alternately in each minion
+cassandra:
+  cluster:
+    - 192.168.50.10
+    - 192.168.50.11
+    - 192.168.50.12

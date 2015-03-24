@@ -287,9 +287,6 @@ JVM_OPTS="$JVM_OPTS -Dcom.sun.management.jmxremote.rmi.port=$JMX_PORT"
 JVM_OPTS="$JVM_OPTS -Dcom.sun.management.jmxremote.ssl=false"
 JVM_OPTS="$JVM_OPTS -Dcom.sun.management.jmxremote.authenticate=false"
 #JVM_OPTS="$JVM_OPTS -Dcom.sun.management.jmxremote.password.file=/etc/cassandra/jmxremote.password"
-JVM_OPTS="$JVM_OPTS $MX4J_ADDRESS"
-JVM_OPTS="$JVM_OPTS $MX4J_PORT"
-JVM_OPTS="$JVM_OPTS $JVM_EXTRA_OPTS"
 
 # DO NOT USE THIS SETTING IN PRODUCTION!
 # Setting consistent.rangemovement to false (default is true in 2.1), will allow cassandra nodes
@@ -298,4 +295,8 @@ JVM_OPTS="$JVM_OPTS $JVM_EXTRA_OPTS"
 #
 # See the following for details:
 # http://www.datastax.com/documentation/cassandra/2.1/cassandra/releaseNotes.html?scroll=reference_ds_mmg_kbh_lk__RNbootstrap
-JVM_OPTS="$JVM_OPTS -Dconsistent.rangemovement=false
+JVM_OPTS="$JVM_OPTS -Dconsistent.rangemovement=false"
+
+JVM_OPTS="$JVM_OPTS $MX4J_ADDRESS"
+JVM_OPTS="$JVM_OPTS $MX4J_PORT"
+JVM_OPTS="$JVM_OPTS $JVM_EXTRA_OPTS"
