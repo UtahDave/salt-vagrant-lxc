@@ -87,59 +87,46 @@ dsc21_create_data_directory:
     - require:
         - file: dsc21_delete_data_directory
 
-# TODO:
+# TODO: Figure out how to install the below schema:
+# Using salt.modules.cassandra_cql (does not support table creation):
 # salt -G 'roles:cassandra-seed' cassandra.create_keyspace salt
 # salt -G 'roles:cassandra-seed' cassandra.create_user salt
 # salt -G 'roles:cassandra-seed' cassandra.grant_permission salt salt
 #
-# Convert the following schema to CQL.
 #
-#CREATE DATABASE  `salt`
-  #DEFAULT CHARACTER SET utf8
-  #DEFAULT COLLATE utf8_general_ci;
+# CREATE KEYSPACE IF NOT EXISTS salt 
+#            WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 1};
 #
-#USE `salt`;
+# CREATE USER IF NOT EXISTS salt WITH PASSWORD 'salt' NOSUPERUSER;
 #
-#--
-#-- Table structure for table `jids`
-#--
+# GRANT ALL ON KEYSPACE salt TO salt;
 #
-#DROP TABLE IF EXISTS `jids`;
-#CREATE TABLE `jids` (
-  #`jid` varchar(255) NOT NULL,
-  #`load` mediumtext NOT NULL,
-  #UNIQUE KEY `jid` (`jid`)
-#) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+# USE salt;
 #
-#--
-#-- Table structure for table `salt_returns`
-#--
+# CREATE KEYSPACE IF NOT EXISTS salt WITH replication = {'class': 'SimpleStrategy', 'replication_factor': '1'};
 #
-#DROP TABLE IF EXISTS `salt_returns`;
-#CREATE TABLE `salt_returns` (
-  #`fun` varchar(50) NOT NULL,
-  #`jid` varchar(255) NOT NULL,
-  #`return` mediumtext NOT NULL,
-  #`id` varchar(255) NOT NULL,
-  #`success` varchar(10) NOT NULL,
-  #`full_ret` mediumtext NOT NULL,
-  #`alter_time` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  #KEY `id` (`id`),
-  #KEY `jid` (`jid`),
-  #KEY `fun` (`fun`)
-#) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+# CREATE TABLE IF NOT EXISTS salt.salt_returns (
+#     jid text PRIMARY KEY,
+#     alter_time timestamp,
+#     full_ret text,
+#     fun text,
+#     id text,
+#     return text,
+#     success text
+# );
+# CREATE INDEX IF NOT EXISTS fun ON salt.salt_returns (fun);
+# CREATE INDEX IF NOT EXISTS id ON salt.salt_returns (id);
 #
-#--
-#-- Table structure for table `salt_events`
-#--
+# CREATE TABLE IF NOT EXISTS salt.jid (
+#     jid text PRIMARY KEY,
+#     load text
+# );
 #
-#DROP TABLE IF EXISTS `salt_events`;
-#CREATE TABLE `salt_events` (
-#`id` BIGINT NOT NULL AUTO_INCREMENT,
-#`tag` varchar(255) NOT NULL,
-#`data` varchar(1024) NOT NULL,
-#`alter_time` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-#`master_id` varchar(255) NOT NULL,
-#PRIMARY KEY (`id`),
-#KEY `tag` (`tag`)
-#) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+# CREATE TABLE IF NOT EXISTS salt.salt_events (
+#     id timeuuid PRIMARY KEY,
+#     alter_time timestamp,
+#     data text,
+#     master_id text,
+#     tag text
+# );
+# CREATE INDEX IF NOT EXISTS tag ON salt.salt_events (tag);

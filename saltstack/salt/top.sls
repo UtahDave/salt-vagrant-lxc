@@ -7,3 +7,5 @@ base:
     - cassandra
     - cassandra.driver
     - cassandra.start
+  'roles:cassandra-seed':
+    - cassandra.ddl
