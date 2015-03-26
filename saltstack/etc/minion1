@@ -581,6 +581,6 @@ grains:
 # This can be done alternately in each minion
 cassandra:
   cluster:
-    - 192.168.50.10
     - 192.168.50.11
     - 192.168.50.12
+    - 192.168.50.13
