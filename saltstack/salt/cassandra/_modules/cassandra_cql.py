@@ -345,7 +345,7 @@ def list_column_families(keyspace=None, contact_points=None, port=None, cql_user
         log.critical('Could not list column families.')
         raise ce
     except BaseException as e:
-        log.critical('Unexpected error while listing column families: {0}'.format(str(e))
+        log.critical('Unexpected error while listing column families: {0}'.format(str(e)))
         raise e
 
 
@@ -384,7 +384,7 @@ def keyspace_exists(keyspace, contact_points=None, port=None, cql_user=None, cql
         log.critical('Could not determine if keyspace exists.')
         raise ce
     except BaseException as e:
-        log.critical('Unexpected error while determining if keyspace exists: {0}'.format(str(e))
+        log.critical('Unexpected error while determining if keyspace exists: {0}'.format(str(e)))
         raise e
 
     return True if ret else False
@@ -452,7 +452,7 @@ def create_keyspace(keyspace, replication_strategy='SimpleStrategy', replication
             log.critical('Could not create keyspace.')
             raise ce
         except BaseException as e:
-            log.critical('Unexpected error while creating keyspace: {0}'.format(str(e))
+            log.critical('Unexpected error while creating keyspace: {0}'.format(str(e)))
             raise e
 
 
@@ -490,7 +490,7 @@ def drop_keyspace(keyspace, contact_points=None, port=None, cql_user=None, cql_p
             log.critical('Could not drop keyspace.')
             raise ce
         except BaseException as e:
-            log.critical('Unexpected error while dropping keyspace: {0}'.format(str(e))
+            log.critical('Unexpected error while dropping keyspace: {0}'.format(str(e)))
             raise e
 
 
@@ -525,7 +525,7 @@ def list_users(contact_points=None, port=None, cql_user=None, cql_pass=None):
         log.critical('Could not list users.')
         raise ce
     except BaseException as e:
-        log.critical('Unexpected error while listing users: {0}'.format(str(e))
+        log.critical('Unexpected error while listing users: {0}'.format(str(e)))
         raise e
 
     return ret
@@ -562,7 +562,7 @@ def create_user(username, password, superuser=False, contact_points=None, port=N
     '''
     superuser_cql = 'superuser' if superuser else 'nosuperuser'
     query = '''create user if not exists {0} with password '{1}' {2};'''.format(username, password, superuser_cql)
-    log.debug("Attempting to create a new user with username={0} superuser={1}".format(username, superuser_cql)
+    log.debug("Attempting to create a new user with username={0} superuser={1}".format(username, superuser_cql))
 
     # The create user query doesn't actually return anything if the query succeeds.
     # If the query fails, catch the exception, log a messange and raise it again.
@@ -572,7 +572,7 @@ def create_user(username, password, superuser=False, contact_points=None, port=N
         log.critical('Could not create user.')
         raise ce
     except BaseException as e:
-        log.critical('Unexpected error while creating user: {0}'.format(str(e))
+        log.critical('Unexpected error while creating user: {0}'.format(str(e)))
         raise e
 
 
@@ -625,7 +625,7 @@ def list_permissions(username=None, resource=None, resource_type='keyspace', per
         log.critical('Could not list permissions.')
         raise ce
     except BaseException as e:
-        log.critical('Unexpected error while granting permissions: {0}'.format(str(e))
+        log.critical('Unexpected error while granting permissions: {0}'.format(str(e)))
         raise e
 
     return ret
@@ -665,7 +665,7 @@ def grant_permission(username, resource=None, resource_type='keyspace', permissi
     permission_cql = "grant {0}".format(permission) if permission else "grant all permissions"
     resource_cql = "on {0} {1}".format(resource_type, resource) if resource else "on all keyspaces"
     query = "{0} {1} to {2}".format(permission_cql, resource_cql, username)
-    log.debug("Attempting to grant permissions with query '{0}'".format(query)
+    log.debug("Attempting to grant permissions with query '{0}'".format(query))
 
     ret = {}
 
@@ -675,7 +675,7 @@ def grant_permission(username, resource=None, resource_type='keyspace', permissi
         log.critical('Could not grant permissions.')
         raise ce
     except BaseException as e:
-        log.critical('Unexpected error while granting permissions: {0}'.format(str(e))
+        log.critical('Unexpected error while granting permissions: {0}'.format(str(e)))
         raise e
 
     return ret

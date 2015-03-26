@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS salt.salt_returns (
     fun text,
     id text,
     return text,
-    success text
+    success boolean 
 );
 CREATE INDEX IF NOT EXISTS fun ON salt.salt_returns (fun);
 CREATE INDEX IF NOT EXISTS id ON salt.salt_returns (id);
