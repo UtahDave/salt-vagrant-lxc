@@ -27,6 +27,7 @@ install-libsodium:
     - cwd: /tmp
     - shell: /bin/bash
     - timeout: 300
+    - reload_modules: true
     - unless: test -x /usr/src/libsodium
     - require:
       - pkg: libsodium-build-essential

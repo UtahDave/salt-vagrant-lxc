@@ -18,4 +18,5 @@ install-java:
     - cwd: /tmp
     - shell: /bin/bash
     - timeout: 300
+    - reload_modules: true
     - unless: test -x /usr/lib/jvm/jdk1.8.0_40

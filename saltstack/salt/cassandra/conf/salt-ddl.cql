@@ -10,18 +10,25 @@ USE salt;
 CREATE KEYSPACE IF NOT EXISTS salt WITH replication = {'class': 'SimpleStrategy', 'replication_factor': '1'};
 
 CREATE TABLE IF NOT EXISTS salt.salt_returns (
-    jid text PRIMARY KEY,
+    jid text,
     alter_time timestamp,
     full_ret text,
     fun text,
     id text,
     return text,
-    success boolean 
+    success boolean,
+    PRIMARY KEY (jid)
 );
 CREATE INDEX IF NOT EXISTS fun ON salt.salt_returns (fun);
 CREATE INDEX IF NOT EXISTS id ON salt.salt_returns (id);
 
-CREATE TABLE IF NOT EXISTS salt.jid (
+CREATE TABLE IF NOT EXISTS salt.minions (
+    id text PRIMARY KEY,
+    last_fun text
+);
+CREATE INDEX IF NOT EXISTS id ON salt.minions(last_fun);
+
+CREATE TABLE IF NOT EXISTS salt.jids (
     jid text PRIMARY KEY,
     load text
 );

@@ -576,10 +576,14 @@ grains:
 # Location of the repository cache file on the master:
 #win_repo_cachefile: 'salt://win/repo/winrepo.p'
 
-# Configure the cassandra cluster.
-# This can be done alternately in each minion
-cassandra:
-  cluster:
-    - 192.168.50.11
-    - 192.168.50.12
-    - 192.168.50.13
+# Configure the cassandra cluster if using the cassandra_cql
+# execution and/or retuner modules from the minion. If using 
+# the cassandra_cql retuner with master_job_cache enabled on 
+# the master, you do NOT need to configure this here. Rather,
+# the following needs to be configured on the master.
+#  
+# cassandra:
+#  cluster:
+#    - 192.168.50.11
+#    - 192.168.50.12
+#    - 192.168.50.13

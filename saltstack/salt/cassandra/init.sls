@@ -37,6 +37,8 @@ include:
   - datastax-repo
   - firewall
   - java
+  - cassandra.add-custom-modules
+  - cassandra.add-custom-returners
 
 # Install Cassandra
 # dsc21 
@@ -52,6 +54,8 @@ dsc21:
       - sls: java
       - sls: firewall
       - sls: datastax-repo
+      - sls: add-custom-modules
+      - sls: add-custom-returners
   service.dead:
     - name: cassandra
     - enable: True
@@ -87,8 +91,8 @@ dsc21_create_data_directory:
     - require:
         - file: dsc21_delete_data_directory
 
-# TODO: Figure out how to install the below schema:
-# Using salt.modules.cassandra_cql (does not support table creation):
+# It is possible to configure cassandra using salt.modules.cassandra_cql.
+# However, the cassandra_cql execution module does not support table/index creation.
 # salt -G 'roles:cassandra-seed' cassandra.create_keyspace salt
 # salt -G 'roles:cassandra-seed' cassandra.create_user salt
 # salt -G 'roles:cassandra-seed' cassandra.grant_permission salt salt

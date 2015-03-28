@@ -53,6 +53,11 @@ Use the following cassandra database schema::
     );
     CREATE INDEX IF NOT EXISTS fun ON salt.salt_returns (fun);
     CREATE INDEX IF NOT EXISTS id ON salt.salt_returns (id);
+
+    CREATE TABLE IF NOT EXISTS salt.minions (
+        id text PRIMARY KEY,
+        last_fun text
+    );
     
     CREATE TABLE IF NOT EXISTS salt.jids (
         jid text PRIMARY KEY,
@@ -94,17 +99,20 @@ from salt.exceptions import CommandExecutionError
 
 # Import third party libs
 try:
-    # This returner depends on the cassandra_cql Salt execution module.
+    # The following imports are not directly required by this module. Rather,
+    # they are required by the modules/cassandra_cql execution module, on which
+    # this module depends.
     #
-    # The cassandra_cql execution module will not load if the DataStax Python Driver
-    # for Apache Cassandra is not installed. This returner cross-calls the 
-    # cassandra_cql execution module using the __salt__ dunder. 
+    # This returner cross-calls the cassandra_cql execution module using the __salt__ dunder. 
+    #
+    # The modules/cassandra_cql execution module will not load if the DataStax Python Driver
+    # for Apache Cassandra is not installed.
     #
     # This module will try to load all of the 3rd party dependencies on which the
-    # cassandra_cql execution module depends.
+    # modules/cassandra_cql execution module depends.
     #
     # Effectively, if the DataStax Python Driver for Apache Cassandra is not
-    # installed, both the cassandra_cql execution module and this returner module
+    # installed, both the modules/cassandra_cql execution module and this returner module
     # will not be loaded by Salt's loader system.
     from cassandra.cluster import Cluster
     from cassandra.cluster import NoHostAvailable
@@ -118,17 +126,20 @@ except ImportError as e:
 log = logging.getLogger(__name__)
 
 # Define the module's virtual name
-# NOTE: The 'cassandra' virtualname is already taken by the
-# returners/cassandra_return.py module.
+#
+# The 'cassandra' __virtualname__ is already taken by the 
+# returners/cassandra_return module, which utilizes nodetool. This module 
+# cross-calls the modules/cassandra_cql execution module, which uses the 
+# DataStax Python Driver for Apache Cassandra. Namespacing allows both the 
+# modules/cassandra_cql and returners/cassandra_cql modules to use the 
+# virtualname 'cassandra_cql'.
 __virtualname__ = 'cassandra_cql'
 
 
 def __virtual__():
     if not HAS_CASSANDRA_DRIVER:
-        log.debug("Failed to load cassandra_cql_return module.")
         return False
 
-    log.debug("Successfully load cassandra_cql_return module.")
     return True
 
 def returner(ret):
@@ -152,11 +163,29 @@ def returner(ret):
     # cassandra_cql.cql_query may raise a CommandExecutionError
     try:
         __salt__['cassandra_cql.cql_query'](query)
-    except CommandExecutionError as ce:
+    except CommandExecutionError:
         log.critical('Could not insert into salt_returns with Cassandra returner.')
-        raise ce;
+        raise
     except Exception as e:
-        log.critical('Unexpected error while inserting into salt_returns: {0}'.format(sys.exec_info()[0]))
+        log.critical('Unexpected error while inserting into salt_returns: {0}'.format(str(e)))
+        raise
+
+    # Store the last function called by the minion
+    # The data in salt.minions will be used by get_fun and get_minions
+    query = '''INSERT INTO salt.minions (
+                 id, last_fun
+               ) VALUES (
+                 '{0}', '{1}'
+               );'''.format(ret['id'], ret['fun'])
+
+    # cassandra_cql.cql_query may raise a CommandExecutionError
+    try:
+        __salt__['cassandra_cql.cql_query'](query)
+    except CommandExecutionError:
+        log.critical('Could not store minion ID with Cassandra returner.')
+        raise
+    except Exception as e:
+        log.critical('Unexpected error while inserting minion ID into the minions table: {0}'.format(str(e)))
         raise
 
 
@@ -184,12 +213,16 @@ def event_return(events):
                                 json.dumps(data), 
                                 __opts__['id'], 
                                 tag)
+
         # cassandra_cql.cql_query may raise a CommandExecutionError
         try:
             __salt__['cassandra_cql.cql_query'](query)
-        except CommandExecutionError as e:
+        except CommandExecutionError:
             log.critical('Could not store events with Cassandra returner.')
-            raise e;
+            raise
+        except Exception as e:
+            log.critical('Unexpected error while inserting into salt_events: {0}'.format(str(e)))
+            raise
 
 
 def save_load(jid, load):
@@ -205,11 +238,15 @@ def save_load(jid, load):
     # cassandra_cql.cql_query may raise a CommandExecutionError
     try:
         __salt__['cassandra_cql.cql_query'](query)
-    except CommandExecutionError as e:
+    except CommandExecutionError:
         log.critical('Could not save load in jids table.')
-        raise e;
+        raise
+    except Exception as e:
+        log.critical('Unexpected error while inserting into jids: {0}'.format(str(e)))
+        raise
 
 
+# salt-run jobs.list_jobs FAILED
 def get_load(jid):
     '''
     Return the load data that marks a specified jid
@@ -221,14 +258,21 @@ def get_load(jid):
     # cassandra_cql.cql_query may raise a CommandExecutionError
     try:
         data = __salt__['cassandra_cql.cql_query'](query)
-        ret = json.loads(data[0])
-    except CommandExecutionError as e:
+        if data:
+            load = data[0].get('load')
+            if load:
+                ret = json.loads(load)
+    except CommandExecutionError:
         log.critical('Could not get load from jids table.')
-        raise e;
+        raise
+    except Exception as e:
+        log.critical('Unexpected error while getting load from jids: {0}'.format(str(e)))
+        raise
 
     return ret
 
 
+# salt-call ret.get_jid cassandra_cql 20150327234537907315 PASSED 
 def get_jid(jid):
     '''
     Return the information returned when the specified job id was executed
@@ -241,44 +285,50 @@ def get_jid(jid):
     try:
         data = __salt__['cassandra_cql.cql_query'](query)
         if data:
-            for minion, full_ret in data:
-                ret[minion] = json.loads(full_ret)
-    except CommandExecutionError as e:
+            for row in data:
+                minion = row.get('id')
+                full_ret = row.get('full_ret')
+                if minion and full_ret:
+                    ret[minion] = json.loads(full_ret)
+    except CommandExecutionError:
         log.critical('Could not select job specific information.')
-        raise e;
+        raise
+    except Exception as e:
+        log.critical('Unexpected error while getting job specific information: {0}'.format(str(e)))
+        raise
 
     return ret
 
 
-# Cassandra does not support joins or sub-queries!
-# The following function was implemented in the mysql returner,
-# but cannot be implemented here, because joins and sub-queries
-# are not supported. 
-#
-#def get_fun(fun):
-#    '''
-#    Return a dict of the last function called for all minions
-#    '''
-#    with _get_serv(ret=None, commit=True) as cur:
-#
-#        sql = '''SELECT s.id,s.jid, s.full_ret
-#                FROM `salt_returns` s
-#                JOIN ( SELECT MAX(`jid`) as jid
-#                    from `salt_returns` GROUP BY fun, id) max
-#                ON s.jid = max.jid
-#                WHERE s.fun = %s
-#                '''
-#
-#        cur.execute(sql, (fun,))
-#        data = cur.fetchall()
-#
-#        ret = {}
-#        if data:
-#            for minion, _, full_ret in data:
-#                ret[minion] = json.loads(full_ret)
-#        return ret
+# salt-call ret.get_fun cassandra_cql test.ping PASSED
+def get_fun(fun):
+    '''
+    Return a dict of the last function called for all minions
+    '''
+    query = '''SELECT id, last_fun FROM salt.minions where last_fun = '{0}';'''.format(fun)
+
+    ret = {}
+
+    # cassandra_cql.cql_query may raise a CommandExecutionError
+    try:
+        data = __salt__['cassandra_cql.cql_query'](query)
+        if data:
+            for row in data:
+                minion = row.get('id')
+                last_fun = row.get('last_fun')
+                if minion and last_fun:
+                    ret[minion] = last_fun
+    except CommandExecutionError:
+        log.critical('Could not get the list of minions.')
+        raise
+    except Exception as e:
+        log.critical('Unexpected error while getting list of minions: {0}'.format(str(e)))
+        raise
+
+    return ret
 
 
+# salt-call ret.get_jids cassandra_cql PASSED
 def get_jids():
     '''
     Return a list of all job ids
@@ -287,34 +337,48 @@ def get_jids():
 
     ret = []
 
+    #import pdb; pdb.set_trace()
     # cassandra_cql.cql_query may raise a CommandExecutionError
     try:
         data = __salt__['cassandra_cql.cql_query'](query)
-        for jid in data:
-            ret.append(jid[0])
-    except CommandExecutionError as e:
+        if data:
+            for row in data:
+                jid = row.get('jid')
+                if jid:
+                    ret.append(jid)
+    except CommandExecutionError:
         log.critical('Could not get a list of all job ids.')
-        raise e;
+        raise
+    except Exception as e:
+        log.critical('Unexpected error while getting list of all job ids: {0}'.format(str(e)))
+        raise
 
     return ret
 
 
+# salt-call ret.get_minions cassandra_cql PASSED
 def get_minions():
     '''
     Return a list of minions
     '''
-    query = '''SELECT DISTINCT id FROM salt.salt_returns;'''
+    query = '''SELECT DISTINCT id FROM salt.minions;'''
 
     ret = []
 
     # cassandra_cql.cql_query may raise a CommandExecutionError
     try:
         data = __salt__['cassandra_cql.cql_query'](query)
-        for minion in data:
-            ret.append(jid[0])
-    except CommandExecutionError as e:
+        if data:
+            for row in data:
+                minion = row.get('id')
+                if minion:
+                    ret.append(minion)
+    except CommandExecutionError:
         log.critical('Could not get the list of minions.')
-        raise e;
+        raise
+    except Exception as e:
+        log.critical('Unexpected error while getting list of minions: {0}'.format(str(e)))
+        raise
 
     return ret
 

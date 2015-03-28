@@ -16,6 +16,7 @@ install-pip:
     - shell: /bin/bash
     - timeout: 300
     - unless: pip -V
+    - reload_modules: true
     - require:
       - pkg: wget
       - pkg: python

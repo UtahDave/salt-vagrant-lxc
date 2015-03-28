@@ -82,7 +82,7 @@ def _loadproperties(property_name, config_option, set_default=False, default=Non
             options = __salt__['config.option']('cassandra')
 	except BaseException as e:
 	    log.error("Failed to get cassandra config options. Reason: {0}".format(str(e)))
-            raise e
+            raise
 
         loaded_property = options.get(config_option)
         if not loaded_property:
@@ -150,12 +150,12 @@ def cql_query(query, contact_points=None, port=None, cql_user=None, cql_pass=Non
     '''
     try:
         cluster, session = _connect(contact_points=contact_points, port=port, cql_user=cql_user, cql_pass=cql_pass)
-    except CommandExecutionError as ce:
+    except CommandExecutionError:
         log.critical('Could not get Cassandra cluster session.')
-        raise ce
+        raise
     except BaseException as e:
         log.critical('Unexpected error while getting Cassandra cluster session: {0}'.format(str(e)))
-        raise e
+        raise
 
     session.row_factory = dict_factory
     ret = []
@@ -165,16 +165,17 @@ def cql_query(query, contact_points=None, port=None, cql_user=None, cql_pass=Non
     except BaseException as e:
         log.error('Failed to execute query: {0}\n reason: {1}'.format(query, str(e)))
         msg = "ERROR: Cassandra query failed: {0} reason: {1}".format(query, str(e))
-        raise CommandExecutionError(msg, e)
+        raise CommandExecutionError(msg)
 
-    for result in results:
-        values = {}
-        for key, value in result.iteritems():
-            # Salt won't return dictionaries with odd types like uuid.UUID
-            if not isinstance(value, unicode):
-                value = str(value)
-            values[key] = value
-        ret.append(values)
+    if results:
+      for result in results:
+          values = {}
+          for key, value in result.iteritems():
+              # Salt won't return dictionaries with odd types like uuid.UUID
+              if not isinstance(value, unicode):
+                  value = str(value)
+              values[key] = value
+          ret.append(values)
 
     cluster.shutdown()
 
@@ -210,12 +211,12 @@ def version(contact_points=None, port=None, cql_user=None, cql_pass=None):
 
     try:
         ret = cql_query(query, contact_points, port, cql_user, cql_pass)
-    except CommandExecutionError as ce:
+    except CommandExecutionError:
         log.critical('Could not get Cassandra version.')
-        raise ce
+        raise
     except BaseException as e:
         log.critical('Unexpected error while getting Cassandra version: {0}'.format(str(e)))
-        raise e
+        raise
 
     return ret[0].get('release_version')
 
@@ -260,12 +261,12 @@ def info(contact_points=None, port=None, cql_user=None, cql_pass=None):
 
     try:
         ret = cql_query(query, contact_points, port, cql_user, cql_pass)
-    except CommandExecutionError as ce:
+    except CommandExecutionError:
         log.critical('Could not list Cassandra info.')
-        raise ce
+        raise
     except BaseException as e:
         log.critical('Unexpected error while listing Cassandra info: {0}'.format(str(e)))
-        raise e
+        raise
 
     return ret
 
@@ -296,14 +297,18 @@ def list_keyspaces(contact_points=None, port=None, cql_user=None, cql_pass=None)
     query = '''select keyspace_name 
                  from system.schema_keyspaces;'''
 
+    ret = {}
+
     try:
         ret = cql_query(query, contact_points, port, cql_user, cql_pass)
-    except CommandExecutionError as ce:
+    except CommandExecutionError:
         log.critical('Could not list keyspaces.')
-        raise ce
+        raise
     except BaseException as e:
         log.critical('Unexpected error while listing keyspaces: {0}'.format(str(e)))
-        raise e
+        raise
+   
+    return ret
 
 
 def list_column_families(keyspace=None, contact_points=None, port=None, cql_user=None, cql_pass=None):
@@ -339,14 +344,18 @@ def list_column_families(keyspace=None, contact_points=None, port=None, cql_user
                  from system.schema_columnfamilies 
                 {0};'''.format(where_clause)
 
+    ret = {}
+
     try:
         ret = cql_query(query, contact_points, port, cql_user, cql_pass)
-    except CommandExecutionError as ce:
+    except CommandExecutionError:
         log.critical('Could not list column families.')
-        raise ce
+        raise
     except BaseException as e:
         log.critical('Unexpected error while listing column families: {0}'.format(str(e)))
-        raise e
+        raise
+
+    return ret
 
 
 def keyspace_exists(keyspace, contact_points=None, port=None, cql_user=None, cql_pass=None):
@@ -374,18 +383,20 @@ def keyspace_exists(keyspace, contact_points=None, port=None, cql_user=None, cql
 
         salt 'minion1' cassandra.list_keyspaces keyspace=system contact_points=minion1
     '''
-    query = '''select * 
+    # Only project the keyspace_name to make the query efficien.
+    # Like an echo
+    query = '''select keyspace_name
                  from system.schema_keyspaces 
                 where keyspace_name = '{0}';'''.format(keyspace)
 
     try:
         ret = cql_query(query, contact_points, port, cql_user, cql_pass)
-    except CommandExecutionError as ce:
+    except CommandExecutionError:
         log.critical('Could not determine if keyspace exists.')
-        raise ce
+        raise
     except BaseException as e:
         log.critical('Unexpected error while determining if keyspace exists: {0}'.format(str(e)))
-        raise e
+        raise
 
     return True if ret else False
 
@@ -448,12 +459,12 @@ def create_keyspace(keyspace, replication_strategy='SimpleStrategy', replication
 
         try:
             cql_query(query, contact_points, port, cql_user, cql_pass)
-        except CommandExecutionError as ce:
+        except CommandExecutionError:
             log.critical('Could not create keyspace.')
-            raise ce
+            raise
         except BaseException as e:
             log.critical('Unexpected error while creating keyspace: {0}'.format(str(e)))
-            raise e
+            raise
 
 
 def drop_keyspace(keyspace, contact_points=None, port=None, cql_user=None, cql_pass=None):
@@ -486,12 +497,14 @@ def drop_keyspace(keyspace, contact_points=None, port=None, cql_user=None, cql_p
         query = '''drop keyspace {0};'''.format(keyspace)
         try:
             cql_query(query, contact_points, port, cql_user, cql_pass)
-        except CommandExecutionError as ce:
+        except CommandExecutionError:
             log.critical('Could not drop keyspace.')
-            raise ce
+            raise
         except BaseException as e:
             log.critical('Unexpected error while dropping keyspace: {0}'.format(str(e)))
-            raise e
+            raise
+
+    return True
 
 
 def list_users(contact_points=None, port=None, cql_user=None, cql_pass=None):
@@ -520,13 +533,13 @@ def list_users(contact_points=None, port=None, cql_user=None, cql_pass=None):
     ret = {}
 
     try:
-        cql_query(query, contact_points, port, cql_user, cql_pass)
-    except CommandExecutionError as ce:
+        ret = cql_query(query, contact_points, port, cql_user, cql_pass)
+    except CommandExecutionError:
         log.critical('Could not list users.')
-        raise ce
+        raise
     except BaseException as e:
         log.critical('Unexpected error while listing users: {0}'.format(str(e)))
-        raise e
+        raise
 
     return ret
 
@@ -568,12 +581,14 @@ def create_user(username, password, superuser=False, contact_points=None, port=N
     # If the query fails, catch the exception, log a messange and raise it again.
     try:
         cql_query(query, contact_points, port, cql_user, cql_pass)
-    except CommandExecutionError as ce:
+    except CommandExecutionError:
         log.critical('Could not create user.')
-        raise ce
+        raise
     except BaseException as e:
         log.critical('Unexpected error while creating user: {0}'.format(str(e)))
-        raise e
+        raise
+
+    return True
 
 
 def list_permissions(username=None, resource=None, resource_type='keyspace', permission=None, contact_points=None,
@@ -621,12 +636,12 @@ def list_permissions(username=None, resource=None, resource_type='keyspace', per
 
     try:
         ret = cql_query(query, contact_points, port, cql_user, cql_pass)
-    except CommandExecutionError as ce:
+    except CommandExecutionError:
         log.critical('Could not list permissions.')
-        raise ce
+        raise
     except BaseException as e:
-        log.critical('Unexpected error while granting permissions: {0}'.format(str(e)))
-        raise e
+        log.critical('Unexpected error while listing permissions: {0}'.format(str(e)))
+        raise
 
     return ret
 
@@ -667,15 +682,13 @@ def grant_permission(username, resource=None, resource_type='keyspace', permissi
     query = "{0} {1} to {2}".format(permission_cql, resource_cql, username)
     log.debug("Attempting to grant permissions with query '{0}'".format(query))
 
-    ret = {}
-
     try:
-        ret = cql_query(query, contact_points, port, cql_user, cql_pass)
-    except CommandExecutionError as ce:
+        cql_query(query, contact_points, port, cql_user, cql_pass)
+    except CommandExecutionError:
         log.critical('Could not grant permissions.')
-        raise ce
+        raise
     except BaseException as e:
         log.critical('Unexpected error while granting permissions: {0}'.format(str(e)))
-        raise e
+        raise
 
-    return ret
+    return True
