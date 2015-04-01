@@ -37,8 +37,6 @@ include:
   - datastax-repo
   - firewall
   - java
-  - cassandra.add-custom-modules
-  - cassandra.add-custom-returners
 
 # Install Cassandra
 # dsc21 
@@ -54,8 +52,6 @@ dsc21:
       - sls: java
       - sls: firewall
       - sls: datastax-repo
-      - sls: add-custom-modules
-      - sls: add-custom-returners
   service.dead:
     - name: cassandra
     - enable: True
