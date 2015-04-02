@@ -14,15 +14,13 @@ The host managing the LXC containers must have sufficient resources (mem, disk)
 to allow for a Salt + Cassandra cluster. The following is the minimum recommended
 host resource allocation:
 
-.. code-block:: text
+Recommendation::
 
     LXC containers: 4
     Memory per container: 2G (configured JVM limit. More would be better)
     Disk per container: 20G (depends on how much data you want to throw at Cassandra)
 
-Conclusion:
-
-.. code-block:: text
+Conclusion::
 
     Min memory available on LXC host: 4 * 2G = 8G
     Min disk available on LXC host: 4 * 20G = 80G
@@ -48,9 +46,7 @@ your hosts lxc packages must already be installed.
 This will download an Ubuntu lxc container and create four linux containers for
 you. One will be a Salt Master named `master` and the others will be Salt
 Minions named `minion1`, `minion2`, and `minion3` containing a Cassandra cluster
-consisting of the following:
-
-.. code-block:: txt
+consisting of the following::
 
     Cluster: 'Test Cluster'
       Datacenter:
@@ -64,9 +60,7 @@ Make sure each container is running
 
     vagrant status
 
-You should see something similar to the following:
-
-.. note::
+You should see something similar to the following::
 
     master                    running (lxc)
     minion1                   running (lxc)
@@ -83,9 +77,7 @@ using Salt.
     vagrant ssh master
     sudo salt '*' test.ping
 
-test.ping should produce the following result:
-
-.. node::
+test.ping should produce the following result::
 
     minion1:
         True
@@ -116,18 +108,18 @@ each Cassandra node has at least begun the seeding process.
     vagrant ssh minion1
     sudo nodetool status
 
-You should see something similar to the following:
-
-.. note::
+You should see something similar to the following::
 
     Datacenter: datacenter1
     =======================
     Status=Up/Down
-    \|/ State=Normal/Leaving/Joining/Moving
+    |/ State=Normal/Leaving/Joining/Moving
     --  Address        Load       Tokens  Owns    Host ID                               Rack
     UN  192.168.50.11  101.39 KB  256     ?       2b604b31-1842-4398-bd45-d01ef025f6fd  rack1
     UN  192.168.50.12  108.45 KB  256     ?       3ee342c5-23a5-45cf-b545-71c66ee400ea  rack1
     UN  192.168.50.13  103 KB     256     ?       87789a2c-c96b-4a5f-86b6-d9c90348fb9c  rack1
+
+TODO: put the following two steps in the orchestrate file:
 
 Configure the Master Job Cache and Event Return to use the cassandra returner
 
