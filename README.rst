@@ -58,27 +58,85 @@ consisting of the following:
         minion2: Cassandra node
         minion3: Cassandra node
 
-The Salt Minions will point to the Salt Master and the Cassandra nodes will point
-to the Cassandra seed node. You can then run the following commands to log into 
-the Salt Master and begin using Salt.
+Make sure each container is running
+
+.. code-block:: bash
+
+    vagrant status
+
+You should see something similar to the following:
+
+.. note::
+
+    master                    running (lxc)
+    minion1                   running (lxc)
+    minion2                   running (lxc)
+    minion3                   running (lxc)
+
+The Salt Minions (minion1-3) will point to the Salt Master (master) and the
+Cassandra nodes (minion2-3) seed from the Cassandra seed node (minion1). You
+can then run the following commands to log into the Salt Master and begin
+using Salt.
 
 .. code-block:: bash
 
     vagrant ssh master
-    sudo salt \* test.ping
+    sudo salt '*' test.ping
 
-Run the following commands while logged into the Salt master to make sure each 
-minion is responding to a ping.
+test.ping should produce the following result:
+
+.. node::
+
+    minion1:
+        True
+    minion3:
+        True
+    minion2:
+        True
+    master_minion:
+        True
+
+Note that there may be a master_minion running on the master. The master_minion
+will not be needed to complete this setup. Once minion1-3 are responding to a
+test.ping, use Salt Orchestration to start the Cassandra seeding process for the
+datacenter. Orchestration guarantees that the seed (minion1) is started before
+the nodes that depend on it for seeding DDL and data.
+
+Run the cassandra-seeding orchestration SLS file
 
 .. code-block:: bash
 
-    sudo salt '*' test.ping
     sudo salt-run state.orchestrate orchestration.cassandra-seeding
 
-Log into the Cassandra seed node and make sure each Cassandra node has at least begun 
-the seeding process.
+In a separate shell, log into the Cassandra seed node (minion1) and make sure
+each Cassandra node has at least begun the seeding process.
 
 .. code-block:: bash
 
     vagrant ssh minion1
     sudo nodetool status
+
+You should see something similar to the following:
+
+.. note::
+
+    Datacenter: datacenter1
+    =======================
+    Status=Up/Down
+    \|/ State=Normal/Leaving/Joining/Moving
+    --  Address        Load       Tokens  Owns    Host ID                               Rack
+    UN  192.168.50.11  101.39 KB  256     ?       2b604b31-1842-4398-bd45-d01ef025f6fd  rack1
+    UN  192.168.50.12  108.45 KB  256     ?       3ee342c5-23a5-45cf-b545-71c66ee400ea  rack1
+    UN  192.168.50.13  103 KB     256     ?       87789a2c-c96b-4a5f-86b6-d9c90348fb9c  rack1
+
+Configure the Master Job Cache and Event Return to use the cassandra returner
+
+.. code-block:: bash
+
+    salt-run state.sls cassandra.enable-in-master-config
+
+Restart the master
+
+.. code-block:: bash
+
+    service salt-master restart

@@ -1,5 +1,4 @@
 # Start cassandra
-
 #include:
 #  - cassandra
 

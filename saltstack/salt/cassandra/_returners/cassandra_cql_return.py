@@ -31,49 +31,50 @@ Return data to a cassandra server
 
 Use the following cassandra database schema::
 
-    CREATE KEYSPACE IF NOT EXISTS salt 
-               WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 1};
-    
+    CREATE KEYSPACE IF NOT EXISTS salt
+        WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 1};
+
     CREATE USER IF NOT EXISTS salt WITH PASSWORD 'salt' NOSUPERUSER;
     
     GRANT ALL ON KEYSPACE salt TO salt;
     
     USE salt;
     
-    CREATE KEYSPACE IF NOT EXISTS salt WITH replication = {'class': 'SimpleStrategy', 'replication_factor': '1'};
-    
     CREATE TABLE IF NOT EXISTS salt.salt_returns (
-        jid text PRIMARY KEY,
+        jid text,
+        minion_id text,
+        fun text,
         alter_time timestamp,
         full_ret text,
-        fun text,
-        id text,
         return text,
-        success boolean
-    );
-    CREATE INDEX IF NOT EXISTS fun ON salt.salt_returns (fun);
-    CREATE INDEX IF NOT EXISTS id ON salt.salt_returns (id);
-
-    CREATE TABLE IF NOT EXISTS salt.minions (
-        id text PRIMARY KEY,
-        last_fun text
-    );
+        success boolean,
+        PRIMARY KEY (jid, minion_id, fun)
+    ) WITH CLUSTERING ORDER BY (minion_id ASC, fun ASC);
+    CREATE INDEX IF NOT EXISTS salt_returns_id ON salt.salt_returns (salt_returns_id);
+    CREATE INDEX IF NOT EXISTS salt_returns_fun ON salt.salt_returns (fun);
     
     CREATE TABLE IF NOT EXISTS salt.jids (
         jid text PRIMARY KEY,
         load text
     );
-
+    
+    CREATE TABLE IF NOT EXISTS salt.minions (
+        minion_id text PRIMARY KEY,
+        last_fun text
+    );
+    CREATE INDEX IF NOT EXISTS minions_last_fun ON salt.minions (last_fun);
+    
     CREATE TABLE IF NOT EXISTS salt.salt_events (
-        id timeuuid PRIMARY KEY,
+        id timeuuid,
+        tag text,
         alter_time timestamp,
         data text,
         master_id text,
-        tag text
-    );
-    CREATE INDEX IF NOT EXISTS tag ON salt.salt_events (tag);
+        PRIMARY KEY (id, tag)
+    ) WITH CLUSTERING ORDER BY (tag ASC);
+    CREATE INDEX tag ON salt.salt_events (tag);
 
-
+    
 Required python modules: cassandra-driver 
 
   To use the cassandra returner, append '--return cassandra' to the salt command. ex:
@@ -147,15 +148,15 @@ def returner(ret):
     Return data to one of potentially many clustered cassandra nodes
     '''
     query = '''INSERT INTO salt.salt_returns (
-                 jid, alter_time, full_ret, fun, id, return, success 
+                 jid, minion_id, fun, alter_time, full_ret, return, success 
                ) VALUES (
                  '{0}', '{1}', '{2}', '{3}', '{4}', '{5}', {6}
                );'''.format(
                  ret['jid'], 
+                 ret['id'], 
+                 ret['fun'], 
                  int(time.time() * 1000),
                  json.dumps(ret), 
-                 ret['fun'], 
-                 ret['id'], 
                  json.dumps(ret['return']), 
                  ret.get('success', False), 
                )
@@ -173,7 +174,7 @@ def returner(ret):
     # Store the last function called by the minion
     # The data in salt.minions will be used by get_fun and get_minions
     query = '''INSERT INTO salt.minions (
-                 id, last_fun
+                 minion_id, last_fun
                ) VALUES (
                  '{0}', '{1}'
                );'''.format(ret['id'], ret['fun'])
@@ -277,7 +278,7 @@ def get_jid(jid):
     '''
     Return the information returned when the specified job id was executed
     '''
-    query = '''SELECT id, full_ret FROM salt.salt_returns WHERE jid = '{0}';'''.format(jid)
+    query = '''SELECT minion_id, full_ret FROM salt.salt_returns WHERE jid = '{0}';'''.format(jid)
 
     ret = {}
 
@@ -286,7 +287,7 @@ def get_jid(jid):
         data = __salt__['cassandra_cql.cql_query'](query)
         if data:
             for row in data:
-                minion = row.get('id')
+                minion = row.get('minion_id')
                 full_ret = row.get('full_ret')
                 if minion and full_ret:
                     ret[minion] = json.loads(full_ret)
@@ -305,7 +306,7 @@ def get_fun(fun):
     '''
     Return a dict of the last function called for all minions
     '''
-    query = '''SELECT id, last_fun FROM salt.minions where last_fun = '{0}';'''.format(fun)
+    query = '''SELECT minion_id, last_fun FROM salt.minions where last_fun = '{0}';'''.format(fun)
 
     ret = {}
 
@@ -314,7 +315,7 @@ def get_fun(fun):
         data = __salt__['cassandra_cql.cql_query'](query)
         if data:
             for row in data:
-                minion = row.get('id')
+                minion = row.get('minion_id')
                 last_fun = row.get('last_fun')
                 if minion and last_fun:
                     ret[minion] = last_fun
@@ -361,7 +362,7 @@ def get_minions():
     '''
     Return a list of minions
     '''
-    query = '''SELECT DISTINCT id FROM salt.minions;'''
+    query = '''SELECT DISTINCT minion_id FROM salt.minions;'''
 
     ret = []
 
@@ -370,7 +371,7 @@ def get_minions():
         data = __salt__['cassandra_cql.cql_query'](query)
         if data:
             for row in data:
-                minion = row.get('id')
+                minion = row.get('minion_id')
                 if minion:
                     ret.append(minion)
     except CommandExecutionError:

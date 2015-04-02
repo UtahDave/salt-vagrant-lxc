@@ -8,10 +8,15 @@ cassandra-cql:
 
 # /etc/hosts could/should be altered to allow the below IP address to be
 # a DNS name instead. Not a high priority right now.
+
+# It is important to understand that the cassandra service starts quickly
+# but cassandra does not accept connections for a while. The below cmd.script
+# calls a script that will loop 15 times; sleeping 1 second between tries.
+# TODO: Cassandra start times may be influenced considerablly by many factors.
+#       Therefore, to find a better solution. 
 cassandra-run-ddl:
-  cmd.run:
-    - name: |
-        cqlsh 192.168.50.11 -u cassandra -p cassandra -f /tmp/salt-ddl.cql
+  cmd.script:
+    - source: salt://cassandra/ddl-retry.sh
     - shell: /bin/bash
     - timeout: 300
     - require:

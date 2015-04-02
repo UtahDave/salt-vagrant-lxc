@@ -7,8 +7,8 @@ VAGRANTFILE_API_VERSION = "2"
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.define :master do |master_config|
     #master_config.vm.box = "fgrehm/precise64-lxc"
-    master_config.vm.box = "fgrehm/trusty64-lxc"
     #master_config.vm.box = "fgrehm/centos-6-64-lxc"
+    master_config.vm.box = "fgrehm/trusty64-lxc"
     master_config.vm.host_name = 'saltmaster.local'
     master_config.vm.network "private_network", ip: "192.168.50.10", lxc__bridge_name: 'virbr0'
     master_config.vm.synced_folder "saltstack/salt/", "/srv/salt"
@@ -34,13 +34,16 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       salt.minion_pub = "saltstack/keys/master_minion.pub"
       salt.verbose = true
     end
+
+    #master_config.vm.provision "shell", inline: "service salt_master start"
+    #master_config.vm.provision "shell", inline: "service salt_minion start"
   end
 
   config.vm.define :minion1 do |minion_config|
     #minion_config.vm.box = "fgrehm/precise64-lxc"
-    minion_config.vm.box = "fgrehm/trusty64-lxc"
     #minion_config.vm.box = "fgrehm/centos-6-64-lxc"
     #minion_config.vm.box = "frensjan/centos-7-64-lxc"
+    minion_config.vm.box = "fgrehm/trusty64-lxc"
     minion_config.vm.host_name = 'saltminion1.local'
     minion_config.vm.network "private_network", ip: "192.168.50.11", lxc__bridge_name: 'virbr0'
     # Make the saltstack/salt/cassandra config files available for 
@@ -57,15 +60,13 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       salt.run_highstate = true
     end
 
-    # Start Cassandra seed to begin seeding process
-    #minion_config.vm.provision "shell",
-        #inline: "salt-run state.sls cassandra.start"
+    #minion_config.vm.provision "shell", inline: "service salt_minion start"
   end
 
   config.vm.define :minion2 do |minion_config|
     #minion_config.vm.box = "fgrehm/precise64-lxc"
-    minion_config.vm.box = "fgrehm/trusty64-lxc"
     #minion_config.vm.box = "fgrehm/centos-6-64-lxc"
+    minion_config.vm.box = "fgrehm/trusty64-lxc"
     minion_config.vm.host_name = 'saltminion2.local'
     minion_config.vm.network "private_network", ip: "192.168.50.12", lxc__bridge_name: 'virbr0'
     # Make the saltstack/salt/cassandra config files available for 
@@ -82,16 +83,13 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       salt.run_highstate = true
     end
 
-    # The Cassandra seed must be started on minion1 before Cassandra is
-    # started on this minion
-    #minion_config.vm.provision "shell",
-        #inline: "salt-run state.sls cassandra.start"
+    #minion_config.vm.provision "shell", inline: "service salt_minion start"
   end
 
   config.vm.define :minion3 do |minion_config|
     #minion_config.vm.box = "fgrehm/precise64-lxc"
-    minion_config.vm.box = "fgrehm/trusty64-lxc"
     #minion_config.vm.box = "fgrehm/centos-6-64-lxc"
+    minion_config.vm.box = "fgrehm/trusty64-lxc"
     minion_config.vm.host_name = 'saltminion3.local'
     minion_config.vm.network "private_network", ip: "192.168.50.13", lxc__bridge_name: 'virbr0'
     # Make the saltstack/salt/cassandra config files available for 
@@ -108,9 +106,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       salt.run_highstate = true
     end
 
-    # The Cassandra seed must be started on minion1 before Cassandra is
-    # started on this minion
-    #minion_config.vm.provision "shell",
-        #inline: "salt-run state.sls cassandra.start"
+    #minion_config.vm.provision "shell", inline: "service salt_minion start"
   end
 end

@@ -642,8 +642,6 @@
 #win_gitrepos:
 #  - 'https://github.com/saltstack/salt-winrepo.git'
 
-master_job_cache: cassandra_cql
-
 # Configure the cassandra cluster.
 # This can be done alternately in each minion
 cassandra:
@@ -652,4 +650,5 @@ cassandra:
     - 192.168.50.12
     - 192.168.50.13
 
-event_return: cassandra_cql
+#master_job_cache: cassandra_cql
+#event_return: cassandra_cql

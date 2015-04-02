@@ -7,31 +7,31 @@ GRANT ALL ON KEYSPACE salt TO salt;
 
 USE salt;
 
-CREATE TABLE salt.salt_returns (
+CREATE TABLE IF NOT EXISTS salt.salt_returns (
     jid text,
-    id text,
+    minion_id text,
     fun text,
     alter_time timestamp,
     full_ret text,
     return text,
     success boolean,
-    PRIMARY KEY (jid, id, fun)
-) WITH CLUSTERING ORDER BY (id ASC, fun ASC);
-CREATE INDEX id ON salt.salt_returns (id);
-CREATE INDEX fun ON salt.salt_returns (fun);
+    PRIMARY KEY (jid, minion_id, fun)
+) WITH CLUSTERING ORDER BY (minion_id ASC, fun ASC);
+CREATE INDEX IF NOT EXISTS salt_returns_id ON salt.salt_returns (salt_returns_id);
+CREATE INDEX IF NOT EXISTS salt_returns_fun ON salt.salt_returns (fun);
 
-CREATE TABLE salt.jids (
+CREATE TABLE IF NOT EXISTS salt.jids (
     jid text PRIMARY KEY,
     load text
 );
 
-CREATE TABLE salt.minions (
-    id text PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS salt.minions (
+    minion_id text PRIMARY KEY,
     last_fun text
 );
-CREATE INDEX last_fun ON salt.minions (last_fun);
+CREATE INDEX IF NOT EXISTS minions_last_fun ON salt.minions (last_fun);
 
-CREATE TABLE salt.salt_events (
+CREATE TABLE IF NOT EXISTS salt.salt_events (
     id timeuuid,
     tag text,
     alter_time timestamp,
