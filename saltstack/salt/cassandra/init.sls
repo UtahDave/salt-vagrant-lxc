@@ -42,6 +42,10 @@ include:
 # dsc21 
 # cassandra21-tools (optional)
 
+# Works for Debian and RHEL derivatives.
+python-blist:
+  pkg.installed
+
 dsc21:
   pkg.installed:
     - skip_verify: True
@@ -52,6 +56,7 @@ dsc21:
       - sls: java
       - sls: firewall
       - sls: datastax-repo
+      - pkg: python-blist
   service.dead:
     - name: cassandra
     - enable: True

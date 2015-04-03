@@ -50,7 +50,7 @@ Use the following cassandra database schema::
         success boolean,
         PRIMARY KEY (jid, minion_id, fun)
     ) WITH CLUSTERING ORDER BY (minion_id ASC, fun ASC);
-    CREATE INDEX IF NOT EXISTS salt_returns_id ON salt.salt_returns (salt_returns_id);
+    CREATE INDEX IF NOT EXISTS salt_returns_minion_id ON salt.salt_returns (minion_id);
     CREATE INDEX IF NOT EXISTS salt_returns_fun ON salt.salt_returns (fun);
     
     CREATE TABLE IF NOT EXISTS salt.jids (
