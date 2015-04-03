@@ -3,12 +3,20 @@
 # auto_bootstrap is set to false in the cassandra.yaml file, so
 # each node can join the cluster at the same time.
 
+
+highstate_all_the_things:
+  salt.state:
+    - tgt: '*'
+    - highstate: True
+
 cassandra_seeds_startup:
   salt.state:
     - tgt: 'roles:cassandra-seed'
     - tgt_type: grain
     - sls:
       - cassandra.start
+    - require:
+      - salt: highstate_all_the_things
 
 cassandra_seed_ddl:
   salt.state:
@@ -24,19 +32,19 @@ cassandra_nodes_startup:
     - tgt: 'roles:cassandra-node'
     - tgt_type: grain
     - sls: cassandra.start
-    - require: 
+    - require:
       - salt: cassandra_seed_ddl
 
 cassandra_cql_runner_install:
   salt.state:
     - tgt: '*'
     - sls: cassandra.add-custom-returners
-    - require: 
+    - require:
       - salt: cassandra_nodes_startup
 
 enable_master_job_cache:
   salt.state:
     - tgt: 'master_minion'
     - sls: cassandra.enable-in-master-config
-    - require: 
+    - require:
       - salt: cassandra_cql_runner_install
