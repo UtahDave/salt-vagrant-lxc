@@ -773,3 +773,8 @@ internode_compression: all
 # reducing overhead from the TCP protocol itself, at the cost of increasing
 # latency if you block for cross-datacenter responses.
 inter_dc_tcp_nodelay: false
+
+# (Default: true ) This setting has been removed from default configuration. It
+# makes new (non-seed) nodes automatically migrate the right data to themselves.
+# When initializing a fresh cluster with no data, add auto_bootstrap: false.
+auto_bootstrap: false

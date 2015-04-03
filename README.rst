@@ -77,7 +77,10 @@ using Salt.
     vagrant ssh master
     sudo salt '*' test.ping
 
-test.ping should produce the following result::
+test.ping should produce the following result. If one or more of the minions
+are down (return False) and no errors were reported during provisioning
+(vagrant up), use ``vagrant ssh`` to log into each container where the minion
+is not running and start the salt-minion service::
 
     minion1:
         True
@@ -89,10 +92,14 @@ test.ping should produce the following result::
         True
 
 Note that there may be a master_minion running on the master. The master_minion
-will not be needed to complete this setup. Once minion1-3 are responding to a
-test.ping, use Salt Orchestration to start the Cassandra seeding process for the
-datacenter. Orchestration guarantees that the seed (minion1) is started before
-the nodes that depend on it for seeding DDL and data.
+will be needed to complete this setup. The master_minion will restart the master
+after the orchestration step enables the master_job_cache and event_return
+configuration parameters in the master config file. 
+
+Once minion1-3 are responding to a test.ping, use Salt Orchestration to start
+the Cassandra seeding process for the datacenter. Orchestration guarantees that
+the seed (minion1) is started before the nodes that depend on it for seeding DDL
+(schema) and data.
 
 Run the cassandra-seeding orchestration SLS file
 
@@ -108,16 +115,42 @@ each Cassandra node has at least begun the seeding process.
     vagrant ssh minion1
     sudo nodetool status
 
-You should see something similar to the following::
+You should see something similar to the following. All three entries may not be
+immediately displayed, but you should at least see 192.168.50.11 (minion1) and
+192.168.50.12 (minion2). If you don't see 192.168.50.13 (minion3), give it a
+couple of minutes, 192.168.50.12 is likely blocking it from seeding right away.
+
+The first two letters encode the status. 
+
+Status - U (up) or D (down)
+Indicates whether the node is functioning or not.
+
+State - N (normal), L (leaving), J (joining), M (moving)
+The state of the node in relation to the cluster.::
 
     Datacenter: datacenter1
     =======================
     Status=Up/Down
     |/ State=Normal/Leaving/Joining/Moving
     --  Address        Load       Tokens  Owns    Host ID                               Rack
-    UN  192.168.50.11  101.39 KB  256     ?       2b604b31-1842-4398-bd45-d01ef025f6fd  rack1
-    UN  192.168.50.12  108.45 KB  256     ?       3ee342c5-23a5-45cf-b545-71c66ee400ea  rack1
-    UN  192.168.50.13  103 KB     256     ?       87789a2c-c96b-4a5f-86b6-d9c90348fb9c  rack1
+    UN  192.168.50.11  102.42 KB  256     ?       2b0a4b93-25ae-42e7-bcde-8c1d6fcd7045  rack1
+    UN  192.168.50.12  60.79 KB   256     ?       ef5df2b0-38d4-4d34-8016-39a13806523e  rack1
+    DJ  192.168.50.13  61.15 KB   256     ?       453c4d47-184c-4fd8-bae4-2a74f00be0cd  rack1
+
+Occationally, Cassandra will stacktrace or timeout when nodes are joining the
+cluster for the first time (seeding).::
+
+    java.lang.RuntimeException: Error during boostrap: Stream failed
+
+In Cassandra release 2.1.x, only one node can sync DDL/data (seeding) and join
+the cluster at a time. If 192.168.50.12 or 192.168.50.13 is not displayed or
+fails to join or enter the "UN" (up, normal) state, login to the master and make
+sure cassandra is running on each cassandra node. If the service is down and the
+node has yet to join the cluster, the seeding process will begin immediately.
+
+.. code-block:: bash
+
+    sudo salt -G 'roles:cassandra*' service.start cassandra
 
 TODO: put the following two steps in the orchestrate file:
 

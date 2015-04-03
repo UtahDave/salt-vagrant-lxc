@@ -295,7 +295,7 @@ JVM_OPTS="$JVM_OPTS -Dcom.sun.management.jmxremote.authenticate=false"
 #
 # See the following for details:
 # http://www.datastax.com/documentation/cassandra/2.1/cassandra/releaseNotes.html?scroll=reference_ds_mmg_kbh_lk__RNbootstrap
-JVM_OPTS="$JVM_OPTS -Dconsistent.rangemovement=false"
+#JVM_OPTS="$JVM_OPTS -Dconsistent.rangemovement=false"
 
 JVM_OPTS="$JVM_OPTS $MX4J_ADDRESS"
 JVM_OPTS="$JVM_OPTS $MX4J_PORT"

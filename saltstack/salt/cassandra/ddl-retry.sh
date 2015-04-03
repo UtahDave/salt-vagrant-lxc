@@ -1,5 +1,7 @@
 #!/bin/bash
-for second in {1..15}
+# The cassandra service immediately starts, but does not immediately
+# accept connections. Try one time a second for 30 seconds.
+for second in {1..30}
 do
     echo "Try $second"
     sleep 1

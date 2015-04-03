@@ -1,9 +1,7 @@
-# Start all cassandra seeds followed by all nodes
-# Nodes boostrap off of the seeds in each datacenter
-#
-# Each VM in the Vagrantfile is using an inline shell
-# call to run the cassandra-start state as soon as salt
-# is installed.
+# Start all cassandra seeds (currently 1) followed by all nodes
+# Nodes boostrap off of the seeds in each datacenter, but
+# auto_bootstrap is set to false in the cassandra.yaml file, so
+# each node can join the cluster at the same time.
 
 cassandra_seeds_startup:
   salt.state:
@@ -27,7 +25,7 @@ cassandra_nodes_startup:
     - tgt_type: grain
     - sls: cassandra.start
     - require: 
-      - salt: cassandra_seeds_startup
+      - salt: cassandra_seed_ddl
 
 cassandra_cql_runner_install:
   salt.state:
@@ -38,7 +36,7 @@ cassandra_cql_runner_install:
 
 enable_master_job_cache:
   salt.state:
-    - tgt: 'master'
+    - tgt: 'master_minion'
     - sls: cassandra.enable-in-master-config
     - require: 
       - salt: cassandra_cql_runner_install

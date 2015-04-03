@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS salt.salt_returns (
     success boolean,
     PRIMARY KEY (jid, minion_id, fun)
 ) WITH CLUSTERING ORDER BY (minion_id ASC, fun ASC);
-CREATE INDEX IF NOT EXISTS salt_returns_id ON salt.salt_returns (salt_returns_id);
+CREATE INDEX IF NOT EXISTS salt_returns_id ON salt.salt_returns (minion_id);
 CREATE INDEX IF NOT EXISTS salt_returns_fun ON salt.salt_returns (fun);
 
 CREATE TABLE IF NOT EXISTS salt.jids (
@@ -39,4 +39,4 @@ CREATE TABLE IF NOT EXISTS salt.salt_events (
     master_id text,
     PRIMARY KEY (id, tag)
 ) WITH CLUSTERING ORDER BY (tag ASC);
-CREATE INDEX tag ON salt.salt_events (tag);
+CREATE INDEX IF NOT EXISTS tag ON salt.salt_events (tag);
