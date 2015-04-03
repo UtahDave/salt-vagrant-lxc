@@ -28,15 +28,12 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       salt.install_type = "git"
       salt.install_args = '2015.2'
       salt.install_master = true
-      #salt.no_minion = true
       salt.minion_config = "saltstack/etc/master_minion"
       salt.minion_key = "saltstack/keys/master_minion.pem"
       salt.minion_pub = "saltstack/keys/master_minion.pub"
       salt.verbose = true
     end
 
-    #master_config.vm.provision "shell", inline: "service salt_master start"
-    #master_config.vm.provision "shell", inline: "service salt_minion start"
   end
 
   config.vm.define :minion1 do |minion_config|
@@ -46,9 +43,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     minion_config.vm.box = "fgrehm/trusty64-lxc"
     minion_config.vm.host_name = 'saltminion1.local'
     minion_config.vm.network "private_network", ip: "192.168.50.11", lxc__bridge_name: 'virbr0'
-    # Make the saltstack/salt/cassandra config files available for 
-    # masterless run highstate
-    minion_config.vm.synced_folder "saltstack/salt/", "/srv/salt"
 
     minion_config.vm.provision :salt do |salt|
       salt.minion_config = "saltstack/etc/minion1"
@@ -57,10 +51,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       salt.install_type = "git"
       salt.install_args = '2015.2'
       salt.verbose = true
-      salt.run_highstate = true
+      #salt.run_highstate = true
     end
 
-    #minion_config.vm.provision "shell", inline: "service salt_minion start"
   end
 
   config.vm.define :minion2 do |minion_config|
@@ -69,9 +62,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     minion_config.vm.box = "fgrehm/trusty64-lxc"
     minion_config.vm.host_name = 'saltminion2.local'
     minion_config.vm.network "private_network", ip: "192.168.50.12", lxc__bridge_name: 'virbr0'
-    # Make the saltstack/salt/cassandra config files available for 
-    # masterless run highstate
-    minion_config.vm.synced_folder "saltstack/salt/", "/srv/salt"
 
     minion_config.vm.provision :salt do |salt|
       salt.minion_config = "saltstack/etc/minion2"
@@ -80,10 +70,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       salt.install_type = "git"
       salt.install_args = '2015.2'
       salt.verbose = true
-      salt.run_highstate = true
+      #salt.run_highstate = true
     end
 
-    #minion_config.vm.provision "shell", inline: "service salt_minion start"
   end
 
   config.vm.define :minion3 do |minion_config|
@@ -92,9 +81,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     minion_config.vm.box = "fgrehm/trusty64-lxc"
     minion_config.vm.host_name = 'saltminion3.local'
     minion_config.vm.network "private_network", ip: "192.168.50.13", lxc__bridge_name: 'virbr0'
-    # Make the saltstack/salt/cassandra config files available for 
-    # masterless run highstate
-    minion_config.vm.synced_folder "saltstack/salt/", "/srv/salt"
 
     minion_config.vm.provision :salt do |salt|
       salt.minion_config = "saltstack/etc/minion3"
@@ -103,9 +89,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       salt.install_type = "git"
       salt.install_args = '2015.2'
       salt.verbose = true
-      salt.run_highstate = true
+      #salt.run_highstate = true
     end
 
-    #minion_config.vm.provision "shell", inline: "service salt_minion start"
   end
 end
